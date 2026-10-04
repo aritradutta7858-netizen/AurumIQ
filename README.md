@@ -1,6 +1,8 @@
 # AurumIQ — Commodity Derivatives Intelligence
 
 > **Hack in Hills 2026** — Quantitative Research Product for MCX Gold Futures Analysis
+> 
+> 🌐 **Live Web Demo:** [https://aritradutta7858-netizen.github.io/AurumIQ/](https://aritradutta7858-netizen.github.io/AurumIQ/)
 
 ---
 
