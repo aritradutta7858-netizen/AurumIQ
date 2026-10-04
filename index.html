@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AurumIQ — Commodity Derivatives Intelligence & Spread Arbitrage</title>
+  <meta name="description" content="Quantitative analytics platform for MCX gold futures normalization, relative spread arbitrage, liquidity-filtered statistical deviation detection, and walk-forward backtesting.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+  <!-- Top Global Header -->
+  <header id="main-header" class="glass-header">
+    <div class="header-left">
+      <div class="brand-logo" id="brand-logo">
+        <div class="gold-cube-icon">
+          <span class="gold-symbol">Au</span>
+          <span class="gold-atomic">79</span>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">Aurum<span class="brand-highlight">IQ</span></span>
+          <span class="brand-tagline">MCX Gold Derivatives Intelligence</span>
+        </div>
+      </div>
+      <div class="data-source-pill" id="source-badge">
+        <span class="status-dot pulse"></span>
+        <span id="source-label">SYNTHETIC DEMO</span>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs" id="nav-tabs" role="tablist">
+      <button class="nav-btn active" id="tab-dashboard" role="tab" data-target="view-dashboard">
+        <span class="nav-icon">📊</span> Dashboard
+      </button>
+      <button class="nav-btn" id="tab-signals" role="tab" data-target="view-signals">
+        <span class="nav-icon">⚡</span> Signals
+        <span class="nav-badge" id="signal-count-badge">3</span>
+      </button>
+      <button class="nav-btn" id="tab-pair" role="tab" data-target="view-pair">
+        <span class="nav-icon">📈</span> Pair Analysis
+      </button>
+      <button class="nav-btn" id="tab-backtest" role="tab" data-target="view-backtest">
+        <span class="nav-icon">🧪</span> Backtest
+      </button>
+      <button class="nav-btn" id="tab-methodology" role="tab" data-target="view-methodology">
+        <span class="nav-icon">📚</span> Methodology
+      </button>
+    </nav>
+
+    <!-- Header Actions -->
+    <div class="header-actions">
+      <button class="btn btn-secondary" id="btn-import-csv" title="Upload MCX Bhavcopy or Custom CSV">
+        <span class="btn-icon">📁</span> Import CSV
+      </button>
+      <button class="btn btn-gold" id="btn-reseed-data" title="Regenerate synthetic market regimes">
+        <span class="btn-icon">🔄</span> Re-seed Demo
+      </button>
+      <button class="btn btn-secondary" id="btn-share-app" title="Copy shareable link to clipboard">
+        <span class="btn-icon">🔗</span> Share
+      </button>
+      <input type="file" id="csv-file-input" accept=".csv" style="display: none;">
+    </div>
+  </header>
+
+  <!-- Live Market Ticker -->
+  <div id="market-ticker-bar" class="ticker-bar">
+    <div class="ticker-track" id="ticker-track">
+      <!-- Injected dynamically by JS -->
+    </div>
+  </div>
+
+  <!-- Main View Container -->
+  <main id="app-container" class="main-content">
+
+    <!-- VIEW 1: DASHBOARD -->
+    <section id="view-dashboard" class="app-view active" role="tabpanel">
+      <!-- Executive Metric Cards -->
+      <div class="metrics-grid">
+        <div class="metric-card" id="card-gold-index">
+          <div class="metric-header">
+            <span class="metric-title">MCX Pure Gold Benchmark</span>
+            <span class="metric-pill gold-pill">999.9 Basis</span>
+          </div>
+          <div class="metric-value-row">
+            <span class="metric-value font-mono" id="val-gold-index">₹7,420.50</span>
+            <span class="metric-sub font-mono">/ gram</span>
+          </div>
+          <div class="metric-footer">
+            <span class="metric-change positive font-mono" id="change-gold-index">+0.84% (Today)</span>
+            <span class="metric-meta font-mono" id="date-gold-index">2024-08-30</span>
+          </div>
+          <div class="sparkline-wrapper">
+            <canvas id="spark-benchmark" width="280" height="40"></canvas>
+          </div>
+        </div>
+
+        <div class="metric-card" id="card-active-spreads">
+          <div class="metric-header">
+            <span class="metric-title">Active Relative Pairs</span>
+            <span class="metric-pill blue-pill">4 Contracts</span>
+          </div>
+          <div class="metric-value-row">
+            <span class="metric-value font-mono" id="val-pair-count">6 Pairs</span>
+            <span class="metric-sub">tracked</span>
+          </div>
+          <div class="metric-footer">
+            <span class="metric-meta">Normalized Purity & Lot Basis</span>
+          </div>
+          <div class="contract-tags">
+            <span class="tag">GOLDM (100g)</span>
+            <span class="tag">GOLDTEN (10g)</span>
+            <span class="tag">GOLDGUINEA (8g)</span>
+            <span class="tag">GOLDPETAL (1g)</span>
+          </div>
+        </div>
+
+        <div class="metric-card" id="card-actionable-signals">
+          <div class="metric-header">
+            <span class="metric-title">Actionable Arbitrage Signals</span>
+            <span class="metric-pill gold-pill" id="actionable-pill">Net Edge > Costs</span>
+          </div>
+          <div class="metric-value-row">
+            <span class="metric-value font-mono text-gold" id="val-actionable-count">2</span>
+            <span class="metric-sub">opportunities</span>
+          </div>
+          <div class="metric-footer">
+            <span class="metric-change positive font-mono" id="val-max-spread-edge">Best Edge: +₹18.40/g</span>
+            <span class="metric-meta font-mono">Cost: ₹6.12/g</span>
+          </div>
+        </div>
+
+        <div class="metric-card" id="card-liquidity-status">
+          <div class="metric-header">
+            <span class="metric-title">Market Liquidity Status</span>
+            <span class="metric-pill green-pill">Healthy</span>
+          </div>
+          <div class="metric-value-row">
+            <span class="metric-value font-mono text-emerald" id="val-aggregate-turnover">₹8,450 L</span>
+            <span class="metric-sub">Est. Turnover</span>
+          </div>
+          <div class="metric-footer">
+            <span class="metric-meta">Avg DTE: <strong id="val-avg-dte">18 days</strong></span>
+            <span class="metric-meta">Expiry decay: <strong id="val-expiry-decay">Normal</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Contract Quotation vs Normalized Table -->
+      <div class="content-panel glass-panel" id="panel-contracts">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">MCX Gold Futures — Quoted vs. Normalized Basis</h2>
+            <p class="panel-subtitle">Comparing raw contract prices vs standardized ₹ / pure gram (999.9 purity basis)</p>
+          </div>
+          <div class="panel-badges">
+            <span class="badge badge-info">Purity Normalized</span>
+            <span class="badge badge-gold">Quotation Adjusted</span>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="table-contracts">
+            <thead>
+              <tr>
+                <th>Contract</th>
+                <th>Underlying Lot</th>
+                <th>Purity</th>
+                <th>Quotation Unit</th>
+                <th>Quoted Price (₹)</th>
+                <th>Normalized (₹ / pure g)</th>
+                <th>Relative Deviation</th>
+                <th>Turnover</th>
+                <th>DTE</th>
+                <th>Liquidity Tier</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-contracts">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Spread Matrix & Quick Insights Grid -->
+      <div class="two-col-grid">
+        <div class="content-panel glass-panel" id="panel-matrix">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">Pairwise Relative Spread Matrix (₹ / pure gram)</h2>
+              <p class="panel-subtitle">Row contract minus Column contract. Values in green/red show relative premium/discount.</p>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="matrix-table" id="table-spread-matrix">
+              <thead>
+                <tr>
+                  <th>Row - Col</th>
+                  <th>GOLDM</th>
+                  <th>GOLDTEN</th>
+                  <th>GOLDGUINEA</th>
+                  <th>GOLDPETAL</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-spread-matrix">
+                <!-- Injected by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="content-panel glass-panel" id="panel-quick-signals">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">Active Market Discrepancies</h2>
+              <p class="panel-subtitle">Statistical deviations |Z| ≥ 1.5 evaluated against statutory execution hurdle</p>
+            </div>
+            <button class="btn btn-sm btn-secondary" id="btn-goto-signals">View All ⚡</button>
+          </div>
+          <div class="quick-signal-list" id="quick-signal-list">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: SIGNALS & ANOMALIES -->
+    <section id="view-signals" class="app-view" role="tabpanel">
+      <!-- Filter Bar -->
+      <div class="filter-bar glass-panel">
+        <div class="filter-group">
+          <label for="filter-pair-select" class="filter-label">Contract Pair</label>
+          <select id="filter-pair-select" class="input-select">
+            <option value="ALL">All Pairs (6 combinations)</option>
+            <option value="GOLDM-GOLDTEN">GOLDM vs GOLDTEN</option>
+            <option value="GOLDM-GOLDGUINEA">GOLDM vs GOLDGUINEA</option>
+            <option value="GOLDM-GOLDPETAL">GOLDM vs GOLDPETAL</option>
+            <option value="GOLDTEN-GOLDGUINEA">GOLDTEN vs GOLDGUINEA</option>
+            <option value="GOLDTEN-GOLDPETAL">GOLDTEN vs GOLDPETAL</option>
+            <option value="GOLDGUINEA-GOLDPETAL">GOLDGUINEA vs GOLDPETAL</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="slider-zscore-filter" class="filter-label">Min |Z-Score|: <span id="lbl-zscore-val" class="font-mono text-gold">1.50</span></label>
+          <input type="range" id="slider-zscore-filter" min="1.0" max="3.0" step="0.1" value="1.5" class="slider-control">
+        </div>
+
+        <div class="filter-group filter-checkboxes">
+          <label class="filter-label">Liquidity Tiers</label>
+          <div class="checkbox-row">
+            <label class="check-label"><input type="checkbox" id="check-tier1" checked> Tier 1 (High)</label>
+            <label class="check-label"><input type="checkbox" id="check-tier2" checked> Tier 2</label>
+            <label class="check-label"><input type="checkbox" id="check-tier3" checked> Tier 3</label>
+            <label class="check-label"><input type="checkbox" id="check-tier4"> Tier 4 (Illiquid)</label>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">Actionability</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-actionable-only">
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">Actionable Only</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Signals Grid -->
+      <div class="signals-grid" id="signals-container">
+        <!-- Injected dynamically -->
+      </div>
+    </section>
+
+    <!-- VIEW 3: PAIR ANALYSIS & CHARTS -->
+    <section id="view-pair" class="app-view" role="tabpanel">
+      <!-- Pair Selector & Statistics Strip -->
+      <div class="pair-control-strip glass-panel">
+        <div class="strip-left">
+          <label for="pair-selector" class="strip-label">Select Relative Pair:</label>
+          <select id="pair-selector" class="input-select input-lg">
+            <option value="GOLDM-GOLDTEN">GOLDM (100g / 995) vs GOLDTEN (10g / 999)</option>
+            <option value="GOLDM-GOLDGUINEA">GOLDM (100g / 995) vs GOLDGUINEA (8g / 999)</option>
+            <option value="GOLDM-GOLDPETAL">GOLDM (100g / 995) vs GOLDPETAL (1g / 999)</option>
+            <option value="GOLDTEN-GOLDGUINEA">GOLDTEN (10g / 999) vs GOLDGUINEA (8g / 999)</option>
+            <option value="GOLDTEN-GOLDPETAL">GOLDTEN (10g / 999) vs GOLDPETAL (1g / 999)</option>
+            <option value="GOLDGUINEA-GOLDPETAL">GOLDGUINEA (8g / 999) vs GOLDPETAL (1g / 999)</option>
+          </select>
+          <button class="btn btn-secondary btn-sm" id="btn-share-pair" title="Share direct link to this pair analysis">
+            <span class="btn-icon">🔗</span> Share Pair
+          </button>
+        </div>
+        <div class="strip-metrics" id="strip-pair-metrics">
+          <!-- Injected dynamically -->
+        </div>
+      </div>
+
+      <!-- Interactive Canvas Charts -->
+      <div class="chart-stack">
+        <!-- Chart 1: Normalized Price Comparison -->
+        <div class="chart-card glass-panel">
+          <div class="chart-header">
+            <div class="chart-title-group">
+              <h3 class="chart-title">1. Normalized Price Series (₹ / pure gram basis)</h3>
+              <p class="chart-desc">Tracks both legs on an identical pure-gram scale to eliminate quotation basis optical illusions</p>
+            </div>
+            <div class="chart-legend" id="legend-prices">
+              <span class="legend-item"><span class="legend-color color-leg-a"></span> <span id="lbl-leg-a">Leg A</span></span>
+              <span class="legend-item"><span class="legend-color color-leg-b"></span> <span id="lbl-leg-b">Leg B</span></span>
+            </div>
+          </div>
+          <div class="chart-canvas-container">
+            <canvas id="canvas-prices" width="1100" height="280"></canvas>
+            <div class="chart-tooltip" id="tooltip-prices"></div>
+          </div>
+        </div>
+
+        <!-- Chart 2: Absolute Spread & Bollinger Bands -->
+        <div class="chart-card glass-panel">
+          <div class="chart-header">
+            <div class="chart-title-group">
+              <h3 class="chart-title">2. Relative Spread & Statistical Bands (₹ / pure gram)</h3>
+              <p class="chart-desc">Spread = Normalized Leg A - Normalized Leg B. Displays 60-day rolling mean and ±2.0σ Bollinger bounds</p>
+            </div>
+            <div class="chart-legend">
+              <span class="legend-item"><span class="legend-color color-spread"></span> Spread</span>
+              <span class="legend-item"><span class="legend-color color-mean"></span> 60D Mean</span>
+              <span class="legend-item"><span class="legend-color color-bands"></span> ±2.0σ Bands</span>
+            </div>
+          </div>
+          <div class="chart-canvas-container">
+            <canvas id="canvas-spread" width="1100" height="280"></canvas>
+            <div class="chart-tooltip" id="tooltip-spread"></div>
+          </div>
+        </div>
+
+        <!-- Chart 3: Rolling Look-Ahead Free Z-Score -->
+        <div class="chart-card glass-panel">
+          <div class="chart-header">
+            <div class="chart-title-group">
+              <h3 class="chart-title">3. Look-Ahead Free Rolling Z-Score</h3>
+              <p class="chart-desc">Evaluated strictly against historical window [t-60, t-1]. Deviation exceeding ±2.0 triggers an anomaly signal</p>
+            </div>
+            <div class="chart-legend">
+              <span class="legend-item"><span class="legend-color color-zscore"></span> Z-Score</span>
+              <span class="legend-item"><span class="legend-color color-thresh-up"></span> +2.0 Thresh</span>
+              <span class="legend-item"><span class="legend-color color-thresh-dn"></span> -2.0 Thresh</span>
+            </div>
+          </div>
+          <div class="chart-canvas-container">
+            <canvas id="canvas-zscore" width="1100" height="240"></canvas>
+            <div class="chart-tooltip" id="tooltip-zscore"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quantitative Analysis & Cost Breakdown Grid -->
+      <div class="two-col-grid" style="margin-top: 1.5rem;">
+        <!-- Mean Reversion & Stationarity Properties -->
+        <div class="content-panel glass-panel" id="panel-quant-props">
+          <div class="panel-header">
+            <h3 class="panel-title">Ornstein-Uhlenbeck Properties & Stationarity</h3>
+          </div>
+          <div class="props-list" id="props-list">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+
+        <!-- Indian Statutory Cost Breakdown -->
+        <div class="content-panel glass-panel" id="panel-cost-breakdown">
+          <div class="panel-header">
+            <h3 class="panel-title">Statutory Indian Commodity Cost Hurdle</h3>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table text-sm" id="table-statutory-costs">
+              <thead>
+                <tr>
+                  <th>Cost Component</th>
+                  <th>Rate / Basis</th>
+                  <th>Leg A (₹)</th>
+                  <th>Leg B (₹)</th>
+                  <th>Round-Trip Impact</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-statutory-costs">
+                <!-- Injected dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: WALK-FORWARD BACKTESTING -->
+    <section id="view-backtest" class="app-view" role="tabpanel">
+      <!-- Backtest Configuration Bar -->
+      <div class="backtest-controls glass-panel">
+        <div class="controls-grid">
+          <div class="control-item">
+            <label for="bt-window" class="control-label">Lookback Window (Days): <span id="bt-lbl-window" class="font-mono text-gold">60</span></label>
+            <input type="range" id="bt-window" min="20" max="90" step="5" value="60" class="slider-control">
+          </div>
+          <div class="control-item">
+            <label for="bt-z-entry" class="control-label">Entry |Z-Score|: <span id="bt-lbl-entry" class="font-mono text-gold">2.0</span></label>
+            <input type="range" id="bt-z-entry" min="1.2" max="3.0" step="0.1" value="2.0" class="slider-control">
+          </div>
+          <div class="control-item">
+            <label for="bt-z-exit" class="control-label">Exit |Z-Score|: <span id="bt-lbl-exit" class="font-mono text-gold">0.5</span></label>
+            <input type="range" id="bt-z-exit" min="0.0" max="1.0" step="0.1" value="0.5" class="slider-control">
+          </div>
+          <div class="control-item">
+            <label for="bt-z-stop" class="control-label">Stop-Loss |Z-Score|: <span id="bt-lbl-stop" class="font-mono text-gold">3.5</span></label>
+            <input type="range" id="bt-z-stop" min="2.5" max="4.5" step="0.1" value="3.5" class="slider-control">
+          </div>
+        </div>
+
+        <div class="controls-footer">
+          <div class="switches-row">
+            <label class="toggle-switch">
+              <input type="checkbox" id="bt-toggle-costs" checked>
+              <span class="toggle-slider"></span>
+              <span class="toggle-text">Deduct Statutory Taxes & Costs</span>
+            </label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="bt-toggle-liquidity" checked>
+              <span class="toggle-slider"></span>
+              <span class="toggle-text">Skip Low Liquidity Regimes</span>
+            </label>
+          </div>
+          <button class="btn btn-gold btn-lg" id="btn-run-backtest">
+            <span class="btn-icon">⚡</span> Run Walk-Forward Simulation
+          </button>
+        </div>
+      </div>
+
+      <!-- Performance KPI Grid -->
+      <div class="kpi-banner glass-panel" id="backtest-kpi-banner">
+        <div class="kpi-item">
+          <span class="kpi-label">Cumulative Strategy PnL</span>
+          <span class="kpi-val font-mono text-emerald" id="bt-kpi-pnl">+₹142,680</span>
+          <span class="kpi-sub positive" id="bt-kpi-return">+28.5% (Net)</span>
+        </div>
+        <div class="kpi-item">
+          <span class="kpi-label">Sharpe Ratio (Annualized)</span>
+          <span class="kpi-val font-mono text-gold" id="bt-kpi-sharpe">1.84</span>
+          <span class="kpi-sub">Risk-free: 6.5%</span>
+        </div>
+        <div class="kpi-item">
+          <span class="kpi-label">Sortino Ratio</span>
+          <span class="kpi-val font-mono text-gold" id="bt-kpi-sortino">2.61</span>
+          <span class="kpi-sub">Downside Vol only</span>
+        </div>
+        <div class="kpi-item">
+          <span class="kpi-label">Max Drawdown</span>
+          <span class="kpi-val font-mono text-rose" id="bt-kpi-maxdd">-4.2%</span>
+          <span class="kpi-sub">Peak to trough</span>
+        </div>
+        <div class="kpi-item">
+          <span class="kpi-label">Win Rate & Trades</span>
+          <span class="kpi-val font-mono" id="bt-kpi-winrate">71.4%</span>
+          <span class="kpi-sub" id="bt-kpi-trades">25 Wins / 10 Losses</span>
+        </div>
+        <div class="kpi-item">
+          <span class="kpi-label">Market-Neutral Alpha</span>
+          <span class="kpi-val font-mono text-cyan" id="bt-kpi-alpha">+26.1%</span>
+          <span class="kpi-sub" id="bt-kpi-beta">Beta vs Gold: 0.02</span>
+        </div>
+      </div>
+
+      <!-- Equity Curve & Attribution Canvas -->
+      <div class="chart-stack">
+        <div class="chart-card glass-panel">
+          <div class="chart-header">
+            <div class="chart-title-group">
+              <h3 class="chart-title">Walk-Forward Cumulative Equity vs Underlying Gold Benchmark</h3>
+              <p class="chart-desc">Demonstrates market neutrality: strategy alpha generates consistent returns regardless of gold directional drift</p>
+            </div>
+            <div class="chart-legend">
+              <span class="legend-item"><span class="legend-color color-equity"></span> AurumIQ Strategy (Net)</span>
+              <span class="legend-item"><span class="legend-color color-benchmark"></span> MCX Gold Benchmark</span>
+            </div>
+          </div>
+          <div class="chart-canvas-container">
+            <canvas id="canvas-equity" width="1100" height="320"></canvas>
+            <div class="chart-tooltip" id="tooltip-equity"></div>
+          </div>
+        </div>
+
+        <div class="chart-card glass-panel">
+          <div class="chart-header">
+            <div class="chart-title-group">
+              <h3 class="chart-title">Historical Drawdown Profile (%)</h3>
+              <p class="chart-desc">Underwater curve tracking capital preservation during anomalous spread expansions</p>
+            </div>
+          </div>
+          <div class="chart-canvas-container">
+            <canvas id="canvas-drawdown" width="1100" height="180"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trade Execution Log -->
+      <div class="content-panel glass-panel" style="margin-top: 1.5rem;">
+        <div class="panel-header">
+          <div>
+            <h3 class="panel-title">Walk-Forward Simulated Trade Execution Log</h3>
+            <p class="panel-subtitle">Every trade simulated strictly using t+1 open execution after t signal generation with full friction deducted</p>
+          </div>
+          <span class="badge badge-info" id="badge-total-trades">35 Trades Executed</span>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table font-mono text-sm" id="table-trades">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Pair</th>
+                <th>Entry Date</th>
+                <th>Exit Date</th>
+                <th>Direction</th>
+                <th>Entry Spread</th>
+                <th>Exit Spread</th>
+                <th>Gross PnL (₹)</th>
+                <th>Taxes & Friction (₹)</th>
+                <th>Net PnL (₹)</th>
+                <th>Return %</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-trades">
+              <!-- Injected dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 5: METHODOLOGY & MATHEMATICAL TRANSPARENCY -->
+    <section id="view-methodology" class="app-view" role="tabpanel">
+      <div class="methodology-grid">
+        <div class="methodology-card glass-panel">
+          <div class="methodology-header">
+            <span class="method-icon">⚖️</span>
+            <h3 class="method-title">1. Purity & Quotation Normalization</h3>
+          </div>
+          <p class="method-text">
+            MCX quotes gold contracts in heterogeneous lot sizes and purity standards. Direct price comparison is an optical illusion:
+          </p>
+          <div class="math-box font-mono">
+            P_norm = (P_quoted / Q_basis) × (999.9 / Purity_ppt)
+          </div>
+          <ul class="method-list">
+            <li><strong>GOLDM:</strong> Quoted per 10g, 995 purity → Factor: $(P / 10) \times (999.9 / 995)$</li>
+            <li><strong>GOLDTEN:</strong> Quoted per 1g, 999 purity → Factor: $(P / 1) \times (999.9 / 999)$</li>
+            <li><strong>GOLDGUINEA:</strong> Quoted per 8g, 999 purity → Factor: $(P / 8) \times (999.9 / 999)$</li>
+            <li><strong>GOLDPETAL:</strong> Quoted per 1g, 999 purity → Factor: $(P / 1) \times (999.9 / 999)$</li>
+          </ul>
+        </div>
+
+        <div class="methodology-card glass-panel">
+          <div class="methodology-header">
+            <span class="method-icon">🛡️</span>
+            <h3 class="method-title">2. Zero Look-Ahead Bias Guarantee</h3>
+          </div>
+          <p class="method-text">
+            Standard backtests suffer from look-ahead bias by computing rolling means or standard deviations using centered windows or full-sample statistics. AurumIQ strictly enforces causality:
+          </p>
+          <div class="math-box font-mono">
+            μ_t = mean(S_{t-W} ... S_{t-1})
+            σ_t = std(S_{t-W} ... S_{t-1})
+            Z_t = (S_t - μ_t) / σ_t
+          </div>
+          <p class="method-text">
+            Trade execution occurs on day $t+1$ at opening price, guaranteeing zero information leakage from future bars.
+          </p>
+        </div>
+
+        <div class="methodology-card glass-panel">
+          <div class="methodology-header">
+            <span class="method-icon">🔄</span>
+            <h3 class="method-title">3. Ornstein-Uhlenbeck Mean Reversion</h3>
+          </div>
+          <p class="method-text">
+            Spread dynamics are modeled as a continuous-time mean-reverting process:
+          </p>
+          <div class="math-box font-mono">
+            dS_t = θ (μ - S_t) dt + σ dW_t
+          </div>
+          <p class="method-text">
+            Using discrete Ordinary Least Squares (OLS) $\Delta S_t = \alpha + \beta S_{t-1} + \epsilon_t$, the mean-reversion speed $\lambda = -\beta / \Delta t$ yields the half-life:
+          </p>
+          <div class="math-box font-mono">
+            Half-Life (t_{1/2}) = ln(2) / λ
+          </div>
+          <p class="method-text">
+            Pairs with half-life between 3 and 25 trading days are optimal for statistical arbitrage.
+          </p>
+        </div>
+
+        <div class="methodology-card glass-panel">
+          <div class="methodology-header">
+            <span class="method-icon">🏛️</span>
+            <h3 class="method-title">4. Indian Statutory Cost Hurdle</h3>
+          </div>
+          <p class="method-text">
+            A signal is only marked <strong>ACTIONABLE</strong> if its expected reversion exceeds the full round-trip friction across both legs by at least 1.5×:
+          </p>
+          <div class="table-responsive">
+            <table class="data-table text-sm">
+              <thead>
+                <tr>
+                  <th>Statutory Tax / Charge</th>
+                  <th>Indian Regulatory Rate</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>MCX Exchange Turnover Charge</td><td>₹210 per Crore (0.0021%)</td></tr>
+                <tr><td>Commodity Transaction Tax (CTT)</td><td>0.0125% (on Sell turnover only)</td></tr>
+                <tr><td>SEBI Turnover Fee</td><td>₹10 per Crore (0.0001%)</td></tr>
+                <tr><td>GST (Goods & Services Tax)</td><td>18% on (Exchange Charges + Brokerage)</td></tr>
+                <tr><td>State Stamp Duty</td><td>0.002% (on Buy turnover)</td></tr>
+                <tr><td>Discount Brokerage</td><td>₹20 per executed order or 0.03%</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="methodology-card glass-panel">
+          <div class="methodology-header">
+            <span class="method-icon">💧</span>
+            <h3 class="method-title">5. Liquidity Filter & DTE Decay</h3>
+          </div>
+          <p class="method-text">
+            Low liquidity contracts suffer wide bid-ask spreads and severe slippage. AurumIQ computes a composite <strong>Liquidity Score (0–100)</strong> combining:
+          </p>
+          <ul class="method-list">
+            <li><strong>Turnover Weight:</strong> 40% (Daily ₹ Turnover relative to contract average)</li>
+            <li><strong>Bid-Ask Spread Proxy:</strong> 30% (High-Low intraday volatility ratio)</li>
+            <li><strong>Days-to-Expiry (DTE) Decay:</strong> 30% (Linear penalty for DTE &lt; 5 days due to delivery margins and physical settlement rolls)</li>
+          </ul>
+        </div>
+
+        <div class="methodology-card glass-panel">
+          <div class="methodology-header">
+            <span class="method-icon">⚠️</span>
+            <h3 class="method-title">6. Model Assumptions & Limitations</h3>
+          </div>
+          <p class="method-text">
+            To ensure complete institutional transparency:
+          </p>
+          <ul class="method-list">
+            <li><strong>Basis Risk:</strong> Delivery center differentials (Ahmedabad vs Mumbai delivery vaults) are assumed uniform in daily settlement prices.</li>
+            <li><strong>Margin Requirements:</strong> SPAN + Extreme Loss Margin (ELM) of ~10-12% is assumed maintained without margin calls.</li>
+            <li><strong>Synthetic Data Tagging:</strong> Synthetic datasets are strictly stamped with <code>DataSource.DEMO</code> to prevent accidental live capital deployment.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="footer-left">
+      <span>AurumIQ v1.0.0 — Commodity Derivatives Intelligence</span>
+      <span class="footer-sep">•</span>
+      <span>Hack in Hills 2026</span>
+    </div>
+    <div class="footer-right">
+      <span class="footer-status"><span class="status-dot green-dot"></span> Quantitative Engine Active</span>
+    </div>
+  <!-- Toast Notifications -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
